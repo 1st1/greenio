@@ -1,0 +1,8 @@
+Experimental support for greenlets in Tulip (PEP 3156).
+
+Requires Tulip, greenlet and Python 3.3.
+
+See examples and unittests for details.
+To run tests: "$ python3 runtests.py"
+
+License: Apache 2.0

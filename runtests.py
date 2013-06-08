@@ -1,3 +1,6 @@
+# Copied from Tulip codebase, covered by Apache 2.0 License
+#
+
 """Run all unittests.
 
 Usage:
