@@ -47,9 +47,16 @@ class socket:
         fut = tulip.get_event_loop().sock_connect(self._sock, addr)
         return yield_from(fut)
 
-    def sendall(self, data):
+    def sendall(self, data, flags=0):
+        assert not flags
         fut = tulip.get_event_loop().sock_sendall(self._sock, data)
         return yield_from(fut)
+
+    def send(self, data, flags=0):
+        assert not flags
+        fut = tulip.get_event_loop().sock_sendall(self._sock, data)
+        yield_from(fut)
+        return len(data)
 
     def accept(self):
         fut = tulip.get_event_loop().sock_accept(self._sock)
