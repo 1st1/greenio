@@ -16,7 +16,10 @@ from tulip import unix_events, tasks, futures
 
 
 class _LoopGreenlet(greenlet.greenlet):
-    """Main greenlet (analolg to main thread) for the event-loop"""
+    """Main greenlet (analog to main thread) for the event-loop.
+
+    It's a policy task to provide event-loop implementation with
+    its "run_*" methods executed in _LoopGreenlet context"""
 
 
 class _TaskGreenlet(greenlet.greenlet):
@@ -75,12 +78,16 @@ class GreenEventLoopPolicy(tulip.DefaultEventLoopPolicy):
 
 
 def yield_from(future):
-    """A function to use instead of ``yield from`` statement.
-    """
+    """A function to use instead of ``yield from`` statement."""
 
     gl = greenlet.getcurrent()
 
     if __debug__:
+        if not isinstance(gl.parent, _LoopGreenlet):
+            raise RuntimeError(
+                    '"greentulip.yield_from" requires GreenEventLoopPolicy '
+                    'or compatible')
+
         if not isinstance(gl, _TaskGreenlet):
             raise RuntimeError(
                     '"greentulip.yield_from" was supposed to be called from a '
@@ -93,21 +100,19 @@ def yield_from(future):
                 'greenlet.yield_from was supposed to receive only Futures, '
                 'got {!r} in task {!r}'.format(future, task))
 
-    else:
-        future.add_done_callback(task._wakeup)
-        task._fut_waiter = future
+    future.add_done_callback(task._wakeup)
+    task._fut_waiter = future
 
-        # task cancellation has been delayed.
-        if task._must_cancel:
-            talk._fut_waiter.cancel()
+    # task cancellation has been delayed.
+    if task._must_cancel:
+        talk._fut_waiter.cancel()
 
     return gl.parent.switch(_YIELDED)
 
 
 def task(func):
     """A decorator, allows use of ``yield_from`` in the decorated or
-    subsequent coroutines.
-    """
+    subsequent coroutines."""
 
     coro = tulip.coroutine(func)
 
