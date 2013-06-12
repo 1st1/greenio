@@ -76,10 +76,6 @@ class _GreenLoopMixin:
         ovr = super().run_until_complete
         return self._green_run(ovr, args, kwargs)
 
-    def run_once(self, *args, **kwargs):
-        ovr = super().run_once
-        return self._green_run(ovr, args, kwargs)
-
     def run_forever(self, *args, **kwargs):
         ovr = super().run_forever
         return self._green_run(ovr, args, kwargs)
