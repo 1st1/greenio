@@ -27,6 +27,7 @@ class socket:
         else:
             self._sock = std_socket(*args, **kwargs)
         self._sock.setblocking(False)
+        self._loop = tulip.get_event_loop()
 
     @classmethod
     def from_socket(cls, sock):
@@ -65,20 +66,20 @@ class socket:
 
     @_copydoc
     def recv(self, nbytes):
-        fut = tulip.get_event_loop().sock_recv(self._sock, nbytes)
+        fut = self._loop.sock_recv(self._sock, nbytes)
         yield_from(fut)
         return fut.result()
 
     @_copydoc
     def connect(self, addr):
-        fut = tulip.get_event_loop().sock_connect(self._sock, addr)
+        fut = self._loop.sock_connect(self._sock, addr)
         yield_from(fut)
         return fut.result()
 
     @_copydoc
     def sendall(self, data, flags=0):
         assert not flags
-        fut = tulip.get_event_loop().sock_sendall(self._sock, data)
+        fut = self._loop.sock_sendall(self._sock, data)
         yield_from(fut)
         return fut.result()
 
@@ -89,13 +90,18 @@ class socket:
 
     @_copydoc
     def accept(self):
-        fut = tulip.get_event_loop().sock_accept(self._sock)
+        fut = self._loop.sock_accept(self._sock)
         yield_from(fut)
         sock, addr = fut.result()
         return self.__class__.from_socket(sock), addr
 
     @_copydoc
     def makefile(self, *args, **kwargs):
+        if args:
+            if args[0] == 'rb':
+                return ReadFile(self._loop, self._sock)
+            elif args[0] == 'wb':
+                return WriteFile(self._loop, self._sock)
         raise NotImplementedError
 
     bind        = _proxy('bind')
@@ -111,6 +117,48 @@ class socket:
     shutdown    = _proxy('shutdown')
 
     del _copydoc, _proxy
+
+
+class ReadFile:
+
+    def __init__(self, loop, sock):
+        self._loop = loop
+        self._sock = sock
+        self._buf = bytearray()
+
+    def read(self, size):
+        while 1:
+            if size <= len(self._buf):
+                data = self._buf[:size]
+                del self._buf[:size]
+                return data
+
+            fut = self._loop.sock_recv(self._sock, size - len(self._buf))
+            yield_from(fut)
+            res = fut.result()
+            self._buf.extend(res)
+
+    def close(self):
+        pass
+
+
+class WriteFile:
+
+    def __init__(self, loop, sock):
+        self._loop = loop
+        self._sock = sock
+        self._buf = bytearray()
+
+    def write(self, data):
+        fut = self._loop.sock_sendall(self._sock, data)
+        yield_from(fut)
+        return fut.result()
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
 
 
 def create_connection(address:tuple, timeout=None):
