@@ -13,6 +13,7 @@ from socket import error, SOCK_STREAM
 from socket import socket as std_socket
 
 from . import yield_from
+from . import GreenUnixSelectorLoop
 
 
 class socket:
@@ -24,6 +25,8 @@ class socket:
             self._sock = std_socket(*args, **kwargs)
         self._sock.setblocking(False)
         self._loop = tulip.get_event_loop()
+        assert isinstance(self._loop, GreenUnixSelectorLoop), \
+            'GreenUnixSelectorLoop event loop is required'
 
     @classmethod
     def from_socket(cls, sock):
@@ -93,12 +96,11 @@ class socket:
         return self.__class__.from_socket(sock), addr
 
     @_copydoc
-    def makefile(self, *args, **kwargs):
-        if args:
-            if args[0] == 'rb':
-                return ReadFile(self._loop, self._sock)
-            elif args[0] == 'wb':
-                return WriteFile(self._loop, self._sock)
+    def makefile(self, mode, *args, **kwargs):
+        if mode == 'rb':
+            return ReadFile(self._loop, self._sock)
+        elif mode == 'wb':
+            return WriteFile(self._loop, self._sock)
         raise NotImplementedError
 
     bind = _proxy('bind')
@@ -135,6 +137,15 @@ class ReadFile:
             res = fut.result()
             self._buf.extend(res)
 
+            if size <= len(self._buf):
+                data = self._buf[:size]
+                del self._buf[:size]
+                return data
+            else:
+                data = self._buf[:]
+                del self._buf[:]
+                return data
+
     def close(self):
         pass
 
@@ -144,7 +155,6 @@ class WriteFile:
     def __init__(self, loop, sock):
         self._loop = loop
         self._sock = sock
-        self._buf = bytearray()
 
     def write(self, data):
         fut = self._loop.sock_sendall(self._sock, data)
