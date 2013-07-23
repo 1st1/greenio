@@ -71,8 +71,10 @@ class TaskTests(unittest.TestCase):
 
         @greentulip.task
         def foo():
-            with self.assertRaisesRegex(RuntimeError,
-                        'greenlet.yield_from was supposed to receive only Futures'):
+            with self.assertRaisesRegex(
+                    RuntimeError,
+                    'greenlet.yield_from was supposed to receive '
+                    'only Futures'):
                 greentulip.yield_from(bar())
 
         fut = foo()
@@ -85,8 +87,9 @@ class TaskTests(unittest.TestCase):
 
         @tulip.task
         def foo():
-            with self.assertRaisesRegex(RuntimeError,
-                          '"greentulip.yield_from" was supposed to be called'):
+            with self.assertRaisesRegex(
+                    RuntimeError,
+                    '"greentulip.yield_from" was supposed to be called'):
                 greentulip.yield_from(bar())
 
         fut = foo()

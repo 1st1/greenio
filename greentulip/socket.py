@@ -2,25 +2,21 @@
 # Copyright (c) 2013 Yury Selivanov
 # License: Apache 2.0
 ##
-
-
 """Greensocket (non-blocking) for Tulip.
 
 Use ``greentulip.socket`` in the same way as you would use stdlib's
 ``socket.socket`` in ``greentulip.task`` tasks or coroutines invoked
 from them.
 """
-
-
 import tulip
-
-from socket import *
+from socket import error, SOCK_STREAM
 from socket import socket as std_socket
 
 from . import yield_from
 
 
 class socket:
+
     def __init__(self, *args, _from_sock=None, **kwargs):
         if _from_sock:
             self._sock = _from_sock
@@ -56,7 +52,8 @@ class socket:
         return proxy
 
     def _copydoc(func):
-        func.__doc__ = getattr(getattr(std_socket, func.__name__), '__doc__', None)
+        func.__doc__ = getattr(
+            getattr(std_socket, func.__name__), '__doc__', None)
         return func
 
     @_copydoc
@@ -104,17 +101,17 @@ class socket:
                 return WriteFile(self._loop, self._sock)
         raise NotImplementedError
 
-    bind        = _proxy('bind')
-    listen      = _proxy('listen')
+    bind = _proxy('bind')
+    listen = _proxy('listen')
     getsockname = _proxy('getsockname')
     getpeername = _proxy('getpeername')
-    gettimeout  = _proxy('gettimeout')
-    getsockopt  = _proxy('getsockopt')
-    setsockopt  = _proxy('setsockopt')
-    fileno      = _proxy('fileno')
-    detach      = _proxy('detach')
-    close       = _proxy('close')
-    shutdown    = _proxy('shutdown')
+    gettimeout = _proxy('gettimeout')
+    getsockopt = _proxy('getsockopt')
+    setsockopt = _proxy('setsockopt')
+    fileno = _proxy('fileno')
+    detach = _proxy('detach')
+    close = _proxy('close')
+    shutdown = _proxy('shutdown')
 
     del _copydoc, _proxy
 
@@ -161,11 +158,12 @@ class WriteFile:
         pass
 
 
-def create_connection(address:tuple, timeout=None):
+def create_connection(address: tuple, timeout=None):
     loop = tulip.get_event_loop()
     host, port = address
 
-    rslt = yield_from(loop.getaddrinfo(host, port, family=0, type=SOCK_STREAM))
+    rslt = yield_from(
+        loop.getaddrinfo(host, port, family=0, type=SOCK_STREAM))
 
     for res in rslt:
         af, socktype, proto, canonname, sa = res

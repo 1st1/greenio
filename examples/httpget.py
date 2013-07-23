@@ -29,7 +29,8 @@ def get():
 
 @tulip.task
 def run():
-    yield from tulip.wait([get(), sleeper()], return_when=tulip.FIRST_COMPLETED)
+    yield from tulip.wait(
+        [get(), sleeper()], return_when=tulip.FIRST_COMPLETED)
 
 
 tulip.set_event_loop_policy(greentulip.GreenEventLoopPolicy())

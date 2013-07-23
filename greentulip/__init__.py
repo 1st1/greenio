@@ -3,11 +3,9 @@
 # License: Apache 2.0
 ##
 
-
 """greentulip package allows to compose greenlets and tulip coroutines."""
 
-
-__all__ = 'task', 'yield_from'
+__all__ = ['task', 'yield_from']
 
 
 import greenlet
@@ -57,7 +55,8 @@ class GreenTask(tulip.Task):
             # The task is in the greenlet, that means that we have a result
             # for the "yield_from"
             if exc is not None:
-                result = self._greenlet.throw(type(exc), exc, exc.__traceback__)
+                result = self._greenlet.throw(
+                    type(exc), exc, exc.__traceback__)
             else:
                 result = self._greenlet.switch(value)
 
@@ -86,6 +85,7 @@ class GreenUnixSelectorLoop(_GreenLoopMixin, unix_events.SelectorEventLoop):
 
 
 class GreenEventLoopPolicy(tulip.DefaultEventLoopPolicy):
+
     def new_event_loop(self):
         return GreenUnixSelectorLoop()
 
@@ -98,22 +98,22 @@ def yield_from(future):
     if __debug__:
         if not isinstance(gl.parent, _LoopGreenlet):
             raise RuntimeError(
-                    '"greentulip.yield_from" requires GreenEventLoopPolicy '
-                    'or compatible')
+                '"greentulip.yield_from" requires GreenEventLoopPolicy '
+                'or compatible')
             # or something went horribly wrong...
 
         if not isinstance(gl, _TaskGreenlet):
             raise RuntimeError(
-                    '"greentulip.yield_from" was supposed to be called from a '
-                    '"greentulip.task" or a subsequent coroutine')
+                '"greentulip.yield_from" was supposed to be called from a '
+                '"greentulip.task" or a subsequent coroutine')
             # ...ditto
 
     task = gl.task
 
     if not isinstance(future, futures.Future):
         raise RuntimeError(
-                'greenlet.yield_from was supposed to receive only Futures, '
-                'got {!r} in task {!r}'.format(future, task))
+            'greenlet.yield_from was supposed to receive only Futures, '
+            'got {!r} in task {!r}'.format(future, task))
 
     # "_wakeup" will call the "_step" method (which we overloaded in
     # GreenTask, and therefore wakeup the awaiting greenlet)
@@ -122,7 +122,7 @@ def yield_from(future):
 
     # task cancellation has been delayed.
     if task._must_cancel:
-        talk._fut_waiter.cancel()
+        task._fut_waiter.cancel()
 
     # Jump out of the current task greenlet (we'll return to GreenTask._step)
     return gl.parent.switch(_YIELDED)

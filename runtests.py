@@ -78,8 +78,8 @@ def load_modules(basedir, suffix='.py'):
                 files.extend(list_dir('{}{}.'.format(prefix, name), path))
             else:
                 if (name != '__init__.py' and
-                    name.endswith(suffix) and
-                    not name.startswith(('.', '_'))):
+                        name.endswith(suffix) and
+                        not name.startswith(('.', '_'))):
                     files.append(('{}{}'.format(prefix, name[:-3]), path))
 
         return files

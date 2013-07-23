@@ -2,8 +2,6 @@
 # Copyright (c) 2013 Yury Selivanov
 # License: Apache 2.0
 ##
-
-
 import greentulip
 import greentulip.socket as greensocket
 
@@ -12,6 +10,7 @@ import unittest
 
 
 class SocketTests(unittest.TestCase):
+
     def setUp(self):
         tulip.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
         self.loop = tulip.new_event_loop()
@@ -22,13 +21,14 @@ class SocketTests(unittest.TestCase):
         tulip.set_event_loop_policy(None)
 
     def test_socket_docs(self):
-        self.assertTrue('accept connections' in greensocket.socket.listen.__doc__)
-        self.assertTrue('Receive' in greensocket.socket.recv.__doc__)
+        self.assertIn('accept connections', greensocket.socket.listen.__doc__)
+        self.assertIn('Receive', greensocket.socket.recv.__doc__)
 
     def test_socket_setblocking(self):
         sock = greensocket.socket()
         self.assertEquals(sock.gettimeout(), 0)
-        with self.assertRaisesRegex(greensocket.error, 'does not support blocking mode'):
+        with self.assertRaisesRegex(
+                greensocket.error, 'does not support blocking mode'):
             sock.setblocking(True)
 
     def test_socket_echo(self):
@@ -95,7 +95,8 @@ class SocketTests(unittest.TestCase):
         thread = threading.Thread(target=client, args=(std_socket.socket,))
         thread.setDaemon(True)
         thread.start()
-        self.loop.run_until_complete(greentulip.task(server)(greensocket.socket))
+        self.loop.run_until_complete(
+            greentulip.task(server)(greensocket.socket))
         thread.join(1)
         self.assertEqual(check, 1)
 
@@ -104,6 +105,7 @@ class SocketTests(unittest.TestCase):
         thread = threading.Thread(target=server, args=(std_socket.socket,))
         thread.setDaemon(True)
         thread.start()
-        self.loop.run_until_complete(greentulip.task(client)(greensocket.socket))
+        self.loop.run_until_complete(
+            greentulip.task(client)(greensocket.socket))
         thread.join(1)
         self.assertEqual(check, 2)

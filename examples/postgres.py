@@ -54,7 +54,8 @@ class Unix(SocketConnector, pq3.Unix):
 class SocketFactory(pg_socket.SocketFactory):
     def __init__(self, *args, socket_extra=None, **kw):
         super().__init__(*args, **kw)
-        self.async = socket_extra.get('async', False) if socket_extra else False
+        self.async = (socket_extra.get('async', False)
+                      if socket_extra else False)
 
     def __call__(self, timeout=None):
         if self.async:
@@ -104,7 +105,8 @@ if __name__ == '__main__':
 
     @greentulip.task
     def db():
-        connection = connector_factory('pq://postgres@localhost:5432', async=True)()
+        connection = connector_factory(
+            'pq://postgres@localhost:5432', async=True)()
         connection.connect()
 
         try:
@@ -122,7 +124,8 @@ if __name__ == '__main__':
 
     @tulip.task
     def run():
-        yield from tulip.wait([db(), sleeper()], return_when=tulip.FIRST_COMPLETED)
+        yield from tulip.wait(
+            [db(), sleeper()], return_when=tulip.FIRST_COMPLETED)
 
     tulip.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
     tulip.get_event_loop().run_until_complete(run())

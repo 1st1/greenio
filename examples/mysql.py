@@ -32,7 +32,6 @@ class GreenConnection(connections.Connection):
 if __name__ == '__main__':
     import greentulip
     import time
-    import tulip
 
     @tulip.task
     def sleeper():
