@@ -5,18 +5,18 @@
 
 
 import greentulip
-import tulip
+import asyncio
 
 
-@tulip.task
+@asyncio.coroutine
 def bar():
     yield
     return 30
 
 
-@tulip.coroutine
+@asyncio.coroutine
 def foo():
-    bar_result = greentulip.yield_from(bar())
+    bar_result = greentulip.yield_from(asyncio.Task(bar()))
     return bar_result + 12
 
 
@@ -25,5 +25,5 @@ def test():
     print((yield from foo()))
 
 
-tulip.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
-tulip.get_event_loop().run_until_complete(test())
+asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+asyncio.get_event_loop().run_until_complete(test())

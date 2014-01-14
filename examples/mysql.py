@@ -1,5 +1,5 @@
 """PyMySQL example"""
-import tulip
+import asyncio
 import socket
 from pymysql import connections
 from greentulip import socket as greensocket
@@ -33,11 +33,11 @@ if __name__ == '__main__':
     import greentulip
     import time
 
-    @tulip.task
+    @asyncio.coroutine
     def sleeper():
         # show that we're not blocked
         while True:
-            yield from tulip.sleep(0.2)
+            yield from asyncio.sleep(0.2)
             print('.')
 
     @greentulip.task
@@ -65,10 +65,10 @@ if __name__ == '__main__':
         finally:
             conn.close()
 
-    @tulip.task
+    @asyncio.coroutine
     def run():
-        yield from tulip.wait([db(), sleeper()],
-                              return_when=tulip.FIRST_COMPLETED)
+        yield from asyncio.wait([db(), sleeper()],
+                              return_when=asyncio.FIRST_COMPLETED)
 
-    tulip.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
-    tulip.get_event_loop().run_until_complete(run())
+    asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+    asyncio.get_event_loop().run_until_complete(asyncio.Task(run()))

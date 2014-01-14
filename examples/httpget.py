@@ -5,13 +5,13 @@
 
 
 import greentulip
-import tulip
+import asyncio
 
 
-@tulip.task
+@asyncio.coroutine
 def sleeper():
     while True:
-        yield from tulip.sleep(0.05)
+        yield from asyncio.sleep(0.05)
         print('.')
 
 
@@ -27,11 +27,11 @@ def get():
     sock.close()
 
 
-@tulip.task
+@asyncio.coroutine
 def run():
-    yield from tulip.wait(
-        [get(), sleeper()], return_when=tulip.FIRST_COMPLETED)
+    yield from asyncio.wait(
+        [get(), sleeper()], return_when=asyncio.FIRST_COMPLETED)
 
 
-tulip.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
-tulip.get_event_loop().run_until_complete(run())
+asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+asyncio.get_event_loop().run_until_complete(asyncio.Task(run()))
