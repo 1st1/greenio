@@ -87,7 +87,7 @@ class _GreenLoopMixin(object):
         return self._green_run(ovr, args, kwargs)
 
 
-class GreenUnixSelectorLoop(_GreenLoopMixin, unix_events.SelectorEventLoop):
+class GreenUnixSelectorLoop(_GreenLoopMixin, asyncio.SelectorEventLoop):
     pass
 
 
