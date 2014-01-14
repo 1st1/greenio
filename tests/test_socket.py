@@ -2,7 +2,9 @@
 # Copyright (c) 2013 Yury Selivanov
 # License: Apache 2.0
 ##
-import tulip
+
+
+import asyncio
 import unittest
 
 import greentulip
@@ -12,17 +14,17 @@ import greentulip.socket as greensocket
 class SocketTests(unittest.TestCase):
 
     def setUp(self):
-        tulip.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
-        self.loop = tulip.new_event_loop()
-        tulip.set_event_loop(self.loop)
+        asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
         self.loop.close()
-        tulip.set_event_loop_policy(None)
+        asyncio.set_event_loop_policy(None)
 
     def test_socket_wrong_event_loop(self):
-        loop = tulip.DefaultEventLoopPolicy().new_event_loop()
-        tulip.set_event_loop(loop)
+        loop = asyncio.DefaultEventLoopPolicy().new_event_loop()
+        asyncio.set_event_loop(loop)
         self.assertRaises(AssertionError, greensocket.socket)
 
     def test_socket_docs(self):

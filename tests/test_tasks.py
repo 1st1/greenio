@@ -5,29 +5,29 @@
 
 
 import greentulip
-import tulip
+import asyncio
 import unittest
 
 
 class TaskTests(unittest.TestCase):
     def setUp(self):
-        tulip.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
-        self.loop = tulip.new_event_loop()
-        tulip.set_event_loop(self.loop)
+        asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
         self.loop.close()
-        tulip.set_event_loop_policy(None)
+        asyncio.set_event_loop_policy(None)
 
     def test_task_yield_from_plain(self):
-        @tulip.task
+        @asyncio.coroutine
         def bar():
             yield
             return 30
 
-        @tulip.coroutine
+        @asyncio.coroutine
         def foo():
-            bar_result = greentulip.yield_from(bar())
+            bar_result = greentulip.yield_from(asyncio.Task(bar()))
             return bar_result + 12
 
         @greentulip.task
@@ -42,7 +42,7 @@ class TaskTests(unittest.TestCase):
     def test_task_yield_from_exception_propagation(self):
         CHK = 0
 
-        @tulip.task
+        @asyncio.coroutine
         def bar():
             yield
             yield
@@ -50,9 +50,9 @@ class TaskTests(unittest.TestCase):
 
         @greentulip.task
         def foo():
-            greentulip.yield_from(bar())
+            greentulip.yield_from(asyncio.Task(bar()))
 
-        @tulip.task
+        @asyncio.coroutine
         def test():
             try:
                 return (yield from foo())
@@ -60,12 +60,11 @@ class TaskTests(unittest.TestCase):
                 nonlocal CHK
                 CHK += 1
 
-        fut = test()
-        self.loop.run_until_complete(fut)
+        self.loop.run_until_complete(test())
         self.assertEqual(CHK, 1)
 
     def test_task_yield_from_nonfuture(self):
-        @tulip.coroutine
+        @asyncio.coroutine
         def bar():
             yield
 
@@ -81,16 +80,15 @@ class TaskTests(unittest.TestCase):
         self.loop.run_until_complete(fut)
 
     def test_task_yield_from_invalid(self):
-        @tulip.coroutine
+        @asyncio.coroutine
         def bar():
             yield
 
-        @tulip.task
+        @asyncio.coroutine
         def foo():
             with self.assertRaisesRegex(
                     RuntimeError,
                     '"greentulip.yield_from" was supposed to be called'):
                 greentulip.yield_from(bar())
 
-        fut = foo()
-        self.loop.run_until_complete(fut)
+        self.loop.run_until_complete(foo())
