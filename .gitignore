@@ -4,3 +4,6 @@
 .DS_Store
 /build
 __pycache__/
+MANIFEST
+dist/
+greenio.egg-info/
