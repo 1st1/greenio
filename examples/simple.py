@@ -4,7 +4,7 @@
 ##
 
 
-import greentulip
+import greenio
 import asyncio
 
 
@@ -16,14 +16,14 @@ def bar():
 
 @asyncio.coroutine
 def foo():
-    bar_result = greentulip.yield_from(asyncio.Task(bar()))
+    bar_result = greenio.yield_from(asyncio.Task(bar()))
     return bar_result + 12
 
 
-@greentulip.task
+@greenio.task
 def test():
     print((yield from foo()))
 
 
-asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
 asyncio.get_event_loop().run_until_complete(test())

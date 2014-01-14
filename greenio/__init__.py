@@ -3,7 +3,7 @@
 # License: Apache 2.0
 ##
 
-"""greentulip package allows to compose greenlets and asyncio coroutines."""
+"""greenio package allows to compose greenlets and asyncio coroutines."""
 
 __all__ = ['task', 'yield_from']
 
@@ -23,7 +23,7 @@ class _LoopGreenlet(greenlet.greenlet):
 
 class _TaskGreenlet(greenlet.greenlet):
     """Each task (and its subsequent coroutines) decorated with
-    ``@greentulip.task`` is executed in this greenlet"""
+    ``@greenio.task`` is executed in this greenlet"""
 
 
 class GreenTask(asyncio.Task):
@@ -105,14 +105,14 @@ def yield_from(future):
     if __debug__:
         if not isinstance(gl.parent, _LoopGreenlet):
             raise RuntimeError(
-                '"greentulip.yield_from" requires GreenEventLoopPolicy '
+                '"greenio.yield_from" requires GreenEventLoopPolicy '
                 'or compatible')
             # or something went horribly wrong...
 
         if not isinstance(gl, _TaskGreenlet):
             raise RuntimeError(
-                '"greentulip.yield_from" was supposed to be called from a '
-                '"greentulip.task" or a subsequent coroutine')
+                '"greenio.yield_from" was supposed to be called from a '
+                '"greenio.task" or a subsequent coroutine')
             # ...ditto
 
     task = gl.task

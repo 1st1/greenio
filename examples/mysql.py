@@ -2,7 +2,7 @@
 import asyncio
 import socket
 from pymysql import connections
-from greentulip import socket as greensocket
+from greenio import socket as greensocket
 
 
 class GreenConnection(connections.Connection):
@@ -30,7 +30,7 @@ class GreenConnection(connections.Connection):
 
 
 if __name__ == '__main__':
-    import greentulip
+    import greenio
     import time
 
     @asyncio.coroutine
@@ -40,7 +40,7 @@ if __name__ == '__main__':
             yield from asyncio.sleep(0.2)
             print('.')
 
-    @greentulip.task
+    @greenio.task
     def db():
         conn = GreenConnection(host='localhost')
 
@@ -70,5 +70,5 @@ if __name__ == '__main__':
         yield from asyncio.wait([db(), sleeper()],
                               return_when=asyncio.FIRST_COMPLETED)
 
-    asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+    asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
     asyncio.get_event_loop().run_until_complete(asyncio.Task(run()))

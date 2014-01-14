@@ -13,7 +13,7 @@ import postgresql
 from postgresql.python import socket as pg_socket
 from postgresql.driver import pq3
 
-from greentulip import socket as greensocket
+from greenio import socket as greensocket
 
 
 class SocketConnector:
@@ -92,7 +92,7 @@ def connector_factory(iri, async=False):
 
 
 if __name__ == '__main__':
-    import greentulip
+    import greenio
     import time
     import asyncio
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
             yield from asyncio.sleep(0.4)
             print('.')
 
-    @greentulip.task
+    @greenio.task
     def db():
         connection = connector_factory(
             'pq://postgres@localhost:5432', async=True)()
@@ -127,5 +127,5 @@ if __name__ == '__main__':
         yield from asyncio.wait(
             [db(), sleeper()], return_when=asyncio.FIRST_COMPLETED)
 
-    asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+    asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
     asyncio.get_event_loop().run_until_complete(asyncio.Task(run()))

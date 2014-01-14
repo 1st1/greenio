@@ -4,7 +4,7 @@
 ##
 
 
-import greentulip
+import greenio
 import asyncio
 
 
@@ -15,9 +15,9 @@ def sleeper():
         print('.')
 
 
-@greentulip.task
+@greenio.task
 def get():
-    from greentulip import socket
+    from greenio import socket
 
     sock = socket.create_connection(('python.org', 80))
     print('connected', sock._sock)
@@ -33,5 +33,5 @@ def run():
         [get(), sleeper()], return_when=asyncio.FIRST_COMPLETED)
 
 
-asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
 asyncio.get_event_loop().run_until_complete(asyncio.Task(run()))

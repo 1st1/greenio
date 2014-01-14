@@ -7,14 +7,14 @@
 import asyncio
 import unittest
 
-import greentulip
-import greentulip.socket as greensocket
+import greenio
+import greenio.socket as greensocket
 
 
 class SocketTests(unittest.TestCase):
 
     def setUp(self):
-        asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+        asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
@@ -103,7 +103,7 @@ class SocketTests(unittest.TestCase):
         thread.setDaemon(True)
         thread.start()
         self.loop.run_until_complete(
-            greentulip.task(server)(greensocket.socket))
+            greenio.task(server)(greensocket.socket))
         thread.join(1)
         self.assertEqual(check, 1)
 
@@ -113,7 +113,7 @@ class SocketTests(unittest.TestCase):
         thread.setDaemon(True)
         thread.start()
         self.loop.run_until_complete(
-            greentulip.task(client)(greensocket.socket))
+            greenio.task(client)(greensocket.socket))
         thread.join(1)
         self.assertEqual(check, 2)
 
@@ -184,6 +184,6 @@ class SocketTests(unittest.TestCase):
         thread.setDaemon(True)
         thread.start()
         self.loop.run_until_complete(
-            greentulip.task(server)(greensocket.socket))
+            greenio.task(server)(greensocket.socket))
         thread.join(1)
         self.assertEqual(check, 1)

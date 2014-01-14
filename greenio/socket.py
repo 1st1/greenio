@@ -4,8 +4,8 @@
 ##
 """Greensocket (non-blocking) for Tulip.
 
-Use ``greentulip.socket`` in the same way as you would use stdlib's
-``socket.socket`` in ``greentulip.task`` tasks or coroutines invoked
+Use ``greenio.socket`` in the same way as you would use stdlib's
+``socket.socket`` in ``greenio.task`` tasks or coroutines invoked
 from them.
 """
 import asyncio
@@ -62,7 +62,7 @@ class socket:
     @_copydoc
     def setblocking(self, flag):
         if flag:
-            raise error('greentulip.socket does not support blocking mode')
+            raise error('greenio.socket does not support blocking mode')
 
     @_copydoc
     def recv(self, nbytes):

@@ -4,14 +4,14 @@
 ##
 
 
-import greentulip
+import greenio
 import asyncio
 import unittest
 
 
 class TaskTests(unittest.TestCase):
     def setUp(self):
-        asyncio.set_event_loop_policy(greentulip.GreenEventLoopPolicy())
+        asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
@@ -27,10 +27,10 @@ class TaskTests(unittest.TestCase):
 
         @asyncio.coroutine
         def foo():
-            bar_result = greentulip.yield_from(asyncio.Task(bar()))
+            bar_result = greenio.yield_from(asyncio.Task(bar()))
             return bar_result + 12
 
-        @greentulip.task
+        @greenio.task
         def test():
             return (yield from foo())
 
@@ -48,9 +48,9 @@ class TaskTests(unittest.TestCase):
             yield
             1/0
 
-        @greentulip.task
+        @greenio.task
         def foo():
-            greentulip.yield_from(asyncio.Task(bar()))
+            greenio.yield_from(asyncio.Task(bar()))
 
         @asyncio.coroutine
         def test():
@@ -68,13 +68,13 @@ class TaskTests(unittest.TestCase):
         def bar():
             yield
 
-        @greentulip.task
+        @greenio.task
         def foo():
             with self.assertRaisesRegex(
                     RuntimeError,
                     'greenlet.yield_from was supposed to receive '
                     'only Futures'):
-                greentulip.yield_from(bar())
+                greenio.yield_from(bar())
 
         fut = foo()
         self.loop.run_until_complete(fut)
@@ -88,7 +88,7 @@ class TaskTests(unittest.TestCase):
         def foo():
             with self.assertRaisesRegex(
                     RuntimeError,
-                    '"greentulip.yield_from" was supposed to be called'):
-                greentulip.yield_from(bar())
+                    '"greenio.yield_from" was supposed to be called'):
+                greenio.yield_from(bar())
 
         self.loop.run_until_complete(foo())
