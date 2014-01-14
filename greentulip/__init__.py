@@ -28,8 +28,8 @@ class _TaskGreenlet(greenlet.greenlet):
 
 class GreenTask(asyncio.Task):
     def __init__(self, *args, **kwargs):
-        super(GreenTask, self).__init__(*args, **kwargs)
         self._greenlet = None
+        super(GreenTask, self).__init__(*args, **kwargs)
 
     def _step(self, value=None, exc=None):
         if self._greenlet is None:
@@ -51,9 +51,14 @@ class GreenTask(asyncio.Task):
                 # calling "yield_from"
                 self._greenlet.task = None
                 self._greenlet = None
+            else:
+                self.__class__._current_tasks.pop(self._loop)
         else:
             # The task is in the greenlet, that means that we have a result
             # for the "yield_from"
+
+            self.__class__._current_tasks[self._loop] = self
+
             if exc is not None:
                 result = self._greenlet.throw(
                     type(exc), exc, exc.__traceback__)
@@ -65,6 +70,8 @@ class GreenTask(asyncio.Task):
             if result is not _YIELDED:
                 self._greenlet.task = None
                 self._greenlet = None
+            else:
+                self.__class__._current_tasks.pop(self._loop)
 
 
 class _GreenLoopMixin(object):
@@ -122,7 +129,8 @@ def yield_from(future):
 
     # task cancellation has been delayed.
     if task._must_cancel:
-        task._fut_waiter.cancel()
+        if task._fut_waiter.cancel():
+            task._must_cancel = False
 
     # Jump out of the current task greenlet (we'll return to GreenTask._step)
     return gl.parent.switch(_YIELDED)
