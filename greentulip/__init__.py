@@ -28,14 +28,14 @@ class _TaskGreenlet(greenlet.greenlet):
 
 class GreenTask(asyncio.Task):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(GreenTask, self).__init__(*args, **kwargs)
         self._greenlet = None
 
     def _step(self, value=None, exc=None):
         if self._greenlet is None:
             # Means that the task is not currently in a suspended greenlet
             # waiting for results for "yield_from"
-            ovr = super()._step
+            ovr = super(GreenTask, self)._step
             self._greenlet = _TaskGreenlet(ovr)
 
             # Store a reference to the current task for "yield_from"
@@ -67,16 +67,16 @@ class GreenTask(asyncio.Task):
                 self._greenlet = None
 
 
-class _GreenLoopMixin:
+class _GreenLoopMixin(object):
     def _green_run(self, method, args, kwargs):
         return _LoopGreenlet(method).switch(*args, **kwargs)
 
     def run_until_complete(self, *args, **kwargs):
-        ovr = super().run_until_complete
+        ovr = super(_GreenLoopMixin, self).run_until_complete
         return self._green_run(ovr, args, kwargs)
 
     def run_forever(self, *args, **kwargs):
-        ovr = super().run_forever
+        ovr = super(_GreenLoopMixin, self).run_forever
         return self._green_run(ovr, args, kwargs)
 
 
@@ -140,5 +140,5 @@ def task(func):
     return task_wrapper
 
 
-class _YIELDED:
+class _YIELDED(object):
     """Marker, don't use it"""
