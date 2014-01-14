@@ -2,7 +2,7 @@
 # Copyright (c) 2013 Yury Selivanov
 # License: Apache 2.0
 ##
-"""Greensocket (non-blocking) for Tulip.
+"""Greensocket (non-blocking) for asyncio.
 
 Use ``greenio.socket`` in the same way as you would use stdlib's
 ``socket.socket`` in ``greenio.task`` tasks or coroutines invoked
