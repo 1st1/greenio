@@ -8,7 +8,7 @@ Use ``greentulip.socket`` in the same way as you would use stdlib's
 ``socket.socket`` in ``greentulip.task`` tasks or coroutines invoked
 from them.
 """
-import tulip
+import asyncio
 from socket import error, SOCK_STREAM
 from socket import socket as std_socket
 
@@ -24,7 +24,7 @@ class socket:
         else:
             self._sock = std_socket(*args, **kwargs)
         self._sock.setblocking(False)
-        self._loop = tulip.get_event_loop()
+        self._loop = asyncio.get_event_loop()
         assert isinstance(self._loop, GreenUnixSelectorLoop), \
             'GreenUnixSelectorLoop event loop is required'
 
@@ -169,7 +169,7 @@ class WriteFile:
 
 
 def create_connection(address: tuple, timeout=None):
-    loop = tulip.get_event_loop()
+    loop = asyncio.get_event_loop()
     host, port = address
 
     rslt = yield_from(

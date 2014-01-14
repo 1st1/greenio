@@ -3,15 +3,15 @@
 # License: Apache 2.0
 ##
 
-"""greentulip package allows to compose greenlets and tulip coroutines."""
+"""greentulip package allows to compose greenlets and asyncio coroutines."""
 
 __all__ = ['task', 'yield_from']
 
 
 import greenlet
 
-import tulip
-from tulip import unix_events, tasks, futures
+import asyncio
+from asyncio import unix_events, tasks, futures
 
 
 class _LoopGreenlet(greenlet.greenlet):
@@ -26,12 +26,12 @@ class _TaskGreenlet(greenlet.greenlet):
     ``@greentulip.task`` is executed in this greenlet"""
 
 
-class GreenTask(tulip.Task):
+class GreenTask(asyncio.Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._greenlet = None
 
-    def _step(self, value=tasks._marker, exc=None):
+    def _step(self, value=None, exc=None):
         if self._greenlet is None:
             # Means that the task is not currently in a suspended greenlet
             # waiting for results for "yield_from"
@@ -84,7 +84,7 @@ class GreenUnixSelectorLoop(_GreenLoopMixin, unix_events.SelectorEventLoop):
     pass
 
 
-class GreenEventLoopPolicy(tulip.DefaultEventLoopPolicy):
+class GreenEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
     def new_event_loop(self):
         return GreenUnixSelectorLoop()
@@ -132,7 +132,7 @@ def task(func):
     """A decorator, allows use of ``yield_from`` in the decorated or
     subsequent coroutines."""
 
-    coro = tulip.coroutine(func)
+    coro = asyncio.coroutine(func)
 
     def task_wrapper(*args, **kwds):
         return GreenTask(coro(*args, **kwds))
