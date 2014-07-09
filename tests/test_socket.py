@@ -24,6 +24,7 @@ class SocketTests(unittest.TestCase):
 
     def test_socket_wrong_event_loop(self):
         loop = asyncio.DefaultEventLoopPolicy().new_event_loop()
+        self.addCleanup(loop.close)
         asyncio.set_event_loop(loop)
         self.assertRaises(AssertionError, greensocket.socket)
 
@@ -37,6 +38,7 @@ class SocketTests(unittest.TestCase):
         with self.assertRaisesRegex(
                 greensocket.error, 'does not support blocking mode'):
             sock.setblocking(True)
+        sock.close()
 
     def test_socket_echo(self):
         import socket as std_socket

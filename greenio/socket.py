@@ -20,13 +20,20 @@ class socket:
 
     def __init__(self, *args, _from_sock=None, **kwargs):
         if _from_sock:
+            sock = None
             self._sock = _from_sock
         else:
-            self._sock = std_socket(*args, **kwargs)
-        self._sock.setblocking(False)
-        self._loop = asyncio.get_event_loop()
-        assert isinstance(self._loop, GreenUnixSelectorLoop), \
-            'GreenUnixSelectorLoop event loop is required'
+            sock = std_socket(*args, **kwargs)
+            self._sock = sock
+        try:
+            self._sock.setblocking(False)
+            self._loop = asyncio.get_event_loop()
+            assert isinstance(self._loop, GreenUnixSelectorLoop), \
+                'GreenUnixSelectorLoop event loop is required'
+        except:
+            if sock is not None:
+                sock.close()
+            raise
 
     @classmethod
     def from_socket(cls, sock):
