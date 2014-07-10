@@ -106,6 +106,9 @@ class GreenEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
 def yield_from(future):
     """A function to use instead of ``yield from`` statement."""
 
+    if asyncio.iscoroutine(future):
+        future = GreenTask(future)
+
     gl = greenlet.getcurrent()
 
     if __debug__:

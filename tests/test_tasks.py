@@ -63,32 +63,29 @@ class TaskTests(unittest.TestCase):
         self.loop.run_until_complete(test())
         self.assertEqual(CHK, 1)
 
-    def test_task_yield_from_nonfuture(self):
+    def test_task_yield_from_coroutine(self):
         @asyncio.coroutine
         def bar():
-            yield
+            yield from []
+            return 5
 
         @greenio.task
         def foo():
-            with self.assertRaisesRegex(
-                    RuntimeError,
-                    'greenlet.yield_from was supposed to receive '
-                    'only Futures'):
-                greenio.yield_from(bar())
+            return greenio.yield_from(bar())
 
         fut = foo()
         self.loop.run_until_complete(fut)
+        self.assertEqual(fut.result(), 5)
 
     def test_task_yield_from_invalid(self):
-        @asyncio.coroutine
         def bar():
-            yield
+            pass
 
         @asyncio.coroutine
         def foo():
             with self.assertRaisesRegex(
                     RuntimeError,
                     '"greenio.yield_from" was supposed to be called'):
-                greenio.yield_from(bar())
+                greenio.yield_from(bar)
 
         self.loop.run_until_complete(foo())
