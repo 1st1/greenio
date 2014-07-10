@@ -25,6 +25,7 @@ runtests.py with --coverage argument is equivalent of:
 
 # Originally written by Beech Horn (for NDB).
 
+from __future__ import print_function
 import argparse
 import logging
 import os
@@ -32,9 +33,10 @@ import re
 import sys
 import subprocess
 import unittest
-import importlib.machinery
-
-assert sys.version >= '3.3', 'Please use Python 3.3 or higher.'
+if sys.version_info >= (3, 3):
+    import importlib.machinery
+else:
+    import imp
 
 ARGS = argparse.ArgumentParser(description="Run all unittests.")
 ARGS.add_argument(
@@ -58,6 +60,15 @@ COV_ARGS = argparse.ArgumentParser(description="Run all unittests.")
 COV_ARGS.add_argument(
     '--coverage', action="store", dest='coverage', nargs='?', const='',
     help='enable coverage report and provide python files directory')
+
+
+if sys.version_info >= (3, 3):
+    def load_module(modname, sourcefile):
+        loader = importlib.machinery.SourceFileLoader(modname, sourcefile)
+        return loader.load_module()
+else:
+    def load_module(modname, sourcefile):
+        return imp.load_source(modname, sourcefile)
 
 
 def load_modules(basedir, suffix='.py'):
@@ -89,8 +100,8 @@ def load_modules(basedir, suffix='.py'):
         if modname == 'runtests':
             continue
         try:
-            loader = importlib.machinery.SourceFileLoader(modname, sourcefile)
-            mods.append((loader.load_module(), sourcefile))
+            mod = load_module(modname, sourcefile)
+            mods.append((mod, sourcefile))
         except SyntaxError:
             raise
         except Exception as err:

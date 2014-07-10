@@ -8,6 +8,7 @@ Use ``greenio.socket`` in the same way as you would use stdlib's
 ``socket.socket`` in ``greenio.task`` tasks or coroutines invoked
 from them.
 """
+from __future__ import absolute_import
 import asyncio
 from socket import error, SOCK_STREAM
 from socket import socket as std_socket
@@ -18,7 +19,8 @@ from . import GreenUnixSelectorLoop
 
 class socket:
 
-    def __init__(self, *args, _from_sock=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        _from_sock = kwargs.pop('_from_sock', None)
         if _from_sock:
             own_sock = None
             self._sock = _from_sock
@@ -120,7 +122,9 @@ class socket:
     getsockopt = _proxy('getsockopt')
     setsockopt = _proxy('setsockopt')
     fileno = _proxy('fileno')
-    detach = _proxy('detach')
+    # socket.detach() was added in Python 3.2
+    if hasattr(std_socket, 'detach'):
+        detach = _proxy('detach')
     close = _proxy('close')
     shutdown = _proxy('shutdown')
 
@@ -177,7 +181,7 @@ class WriteFile:
         pass
 
 
-def create_connection(address: tuple, timeout=None):
+def create_connection(address, timeout=None):
     loop = asyncio.get_event_loop()
     host, port = address
 

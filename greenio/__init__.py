@@ -13,6 +13,8 @@ import greenlet
 import asyncio
 from asyncio import unix_events, tasks, futures
 
+import sys
+
 
 class _LoopGreenlet(greenlet.greenlet):
     """Main greenlet (analog to main thread) for the event-loop.
@@ -60,8 +62,12 @@ class GreenTask(asyncio.Task):
             self.__class__._current_tasks[self._loop] = self
 
             if exc is not None:
+                if hasattr(exc, '__traceback__'):
+                    tb = exc.__traceback__
+                else:
+                    tb = sys.exc_info()[2]
                 result = self._greenlet.throw(
-                    type(exc), exc, exc.__traceback__)
+                    type(exc), exc, tb)
             else:
                 result = self._greenlet.switch(value)
 

@@ -10,6 +10,8 @@ import unittest
 import greenio
 import greenio.socket as greensocket
 
+import socket as std_socket
+
 
 class SocketTests(unittest.TestCase):
 
@@ -30,7 +32,9 @@ class SocketTests(unittest.TestCase):
 
     def test_socket_docs(self):
         self.assertIn('accept connections', greensocket.socket.listen.__doc__)
-        self.assertIn('Receive', greensocket.socket.recv.__doc__)
+        # On Python 2.7, socket.recv() has no documentation
+        if std_socket.socket.recv.__doc__:
+            self.assertIn('Receive', greensocket.socket.recv.__doc__)
 
     def test_socket_setblocking(self):
         sock = greensocket.socket()
@@ -41,11 +45,10 @@ class SocketTests(unittest.TestCase):
         sock.close()
 
     def test_socket_echo(self):
-        import socket as std_socket
         import threading
         import time
 
-        check = 0
+        non_local = {'addr': None, 'check': 0}
         ev = threading.Event()
 
         def server(sock_factory):
@@ -54,8 +57,7 @@ class SocketTests(unittest.TestCase):
 
             assert socket.fileno() is not None
 
-            nonlocal addr
-            addr = socket.getsockname()
+            non_local['addr'] = socket.getsockname()
             socket.listen(1)
 
             ev.set()
@@ -80,9 +82,8 @@ class SocketTests(unittest.TestCase):
             ev.clear()
             time.sleep(0.1)
 
-            assert addr
             sock = sock_factory()
-            sock.connect(addr)
+            sock.connect(non_local['addr'])
 
             data = b'hello greenlets\r'
             sock.sendall(data)
@@ -94,12 +95,10 @@ class SocketTests(unittest.TestCase):
             self.assertEqual(data, rep)
             ev.set()
 
-            nonlocal check
-            check += 1
+            non_local['check'] += 1
 
             sock.close()
 
-        addr = None
         ev.clear()
         thread = threading.Thread(target=client, args=(std_socket.socket,))
         thread.setDaemon(True)
@@ -107,9 +106,9 @@ class SocketTests(unittest.TestCase):
         self.loop.run_until_complete(
             greenio.task(server)(greensocket.socket))
         thread.join(1)
-        self.assertEqual(check, 1)
+        self.assertEqual(non_local['check'], 1)
 
-        addr = None
+        non_local['addr'] = None
         ev.clear()
         thread = threading.Thread(target=server, args=(std_socket.socket,))
         thread.setDaemon(True)
@@ -117,14 +116,13 @@ class SocketTests(unittest.TestCase):
         self.loop.run_until_complete(
             greenio.task(client)(greensocket.socket))
         thread.join(1)
-        self.assertEqual(check, 2)
+        self.assertEqual(non_local['check'], 2)
 
     def test_files_socket_echo(self):
-        import socket as std_socket
         import threading
         import time
 
-        check = 0
+        non_local = {'check': 0, 'addr': None}
         ev = threading.Event()
 
         def server(sock_factory):
@@ -133,8 +131,7 @@ class SocketTests(unittest.TestCase):
 
             assert socket.fileno() is not None
 
-            nonlocal addr
-            addr = socket.getsockname()
+            non_local['addr'] = socket.getsockname()
             socket.listen(1)
 
             ev.set()
@@ -161,9 +158,8 @@ class SocketTests(unittest.TestCase):
             ev.clear()
             time.sleep(0.1)
 
-            assert addr
             sock = sock_factory()
-            sock.connect(addr)
+            sock.connect(non_local['addr'])
 
             data = b'hello greenlets\r'
             sock.sendall(data)
@@ -175,12 +171,10 @@ class SocketTests(unittest.TestCase):
             self.assertEqual(data, rep)
             ev.set()
 
-            nonlocal check
-            check += 1
+            non_local['check'] += 1
 
             sock.close()
 
-        addr = None
         ev.clear()
         thread = threading.Thread(target=client, args=(std_socket.socket,))
         thread.setDaemon(True)
@@ -188,4 +182,4 @@ class SocketTests(unittest.TestCase):
         self.loop.run_until_complete(
             greenio.task(server)(greensocket.socket))
         thread.join(1)
-        self.assertEqual(check, 1)
+        self.assertEqual(non_local['check'], 1)
