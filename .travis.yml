@@ -1,9 +1,11 @@
 language: python
 
 python:
+    - 3.3
     - 3.4
 
 install:
+    - if [[ $TRAVIS_PYTHON_VERSION == '3.3' ]]; then pip install asyncio; fi
     - python setup.py install
 
 script:
