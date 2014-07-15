@@ -9,9 +9,47 @@ __all__ = ['task', 'yield_from']
 
 
 import greenlet
+import sys
 
-import asyncio
-from asyncio import unix_events, tasks, futures
+try:
+    import asyncio
+except ImportError:
+    asyncio = None
+try:
+    import trollius
+except ImportError:
+    trollius = None
+    if asyncio is None:
+        raise
+if asyncio is None:
+    asyncio = trollius
+
+if trollius is not None:
+    def _async(future):
+        # trollius iscoroutine() accepts trollius and asyncio coroutine
+        # objects
+        if trollius.iscoroutine(future):
+            loop = asyncio.get_event_loop()
+            return loop.create_task(future)
+        else:
+            return future
+
+    def _create_task(coro):
+        loop = asyncio.get_event_loop()
+        return loop.create_task(coro)
+else:
+    def _async(future):
+        if asyncio.iscoroutine(future):
+            return GreenTask(future)
+        else:
+            return future
+
+    def _create_task(coro):
+        return GreenTask(coro)
+
+_FUTURE_CLASSES = (asyncio.Future,)
+if trollius is not None and trollius is not asyncio:
+    _FUTURE_CLASSES += (trollius.Future,)
 
 import sys
 
@@ -28,16 +66,16 @@ class _TaskGreenlet(greenlet.greenlet):
     ``@greenio.task`` is executed in this greenlet"""
 
 
-class GreenTask(asyncio.Task):
+class _GreenTaskMixin(object):
     def __init__(self, *args, **kwargs):
         self._greenlet = None
-        super(GreenTask, self).__init__(*args, **kwargs)
+        super(_GreenTaskMixin, self).__init__(*args, **kwargs)
 
     def _step(self, value=None, exc=None):
         if self._greenlet is None:
             # Means that the task is not currently in a suspended greenlet
             # waiting for results for "yield_from"
-            ovr = super(GreenTask, self)._step
+            ovr = super(_GreenTaskMixin, self)._step
             self._greenlet = _TaskGreenlet(ovr)
 
             # Store a reference to the current task for "yield_from"
@@ -93,21 +131,43 @@ class _GreenLoopMixin(object):
         return self._green_run(ovr, args, kwargs)
 
 
-class GreenUnixSelectorLoop(_GreenLoopMixin, asyncio.SelectorEventLoop):
+class GreenTask(_GreenTaskMixin, asyncio.Task):
     pass
 
 
-class GreenEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+class GreenUnixSelectorLoop(_GreenLoopMixin, asyncio.SelectorEventLoop):
+    def create_task(self, coro):
+        return GreenTask(coro)
 
+
+class GreenEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     def new_event_loop(self):
         return GreenUnixSelectorLoop()
+
+
+if trollius is not None:
+    if trollius is not asyncio:
+        class GreenTrolliusTask(_GreenTaskMixin, trollius.Task):
+            pass
+
+        class GreenTrolliusUnixSelectorLoop(_GreenLoopMixin, trollius.SelectorEventLoop):
+            def create_task(self, coro):
+                return GreenTrolliusTask(coro)
+
+        class GreenTrolliusEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+
+            def new_event_loop(self):
+                return GreenTrolliusUnixSelectorLoop()
+    else:
+        GreenTrolliusTask = GreenTask
+        GreenTrolliusUnixSelectorLoop = GreenUnixSelectorLoop
+        GreenTrolliusEventLoopPolicy = GreenEventLoopPolicy
 
 
 def yield_from(future):
     """A function to use instead of ``yield from`` statement."""
 
-    if asyncio.iscoroutine(future):
-        future = GreenTask(future)
+    future = _async(future)
 
     gl = greenlet.getcurrent()
 
@@ -126,7 +186,7 @@ def yield_from(future):
 
     task = gl.task
 
-    if not isinstance(future, futures.Future):
+    if not isinstance(future, _FUTURE_CLASSES):
         raise RuntimeError(
             'greenlet.yield_from was supposed to receive only Futures, '
             'got {!r} in task {!r}'.format(future, task))
@@ -149,10 +209,11 @@ def task(func):
     """A decorator, allows use of ``yield_from`` in the decorated or
     subsequent coroutines."""
 
-    coro = asyncio.coroutine(func)
+    coro_func = asyncio.coroutine(func)
 
     def task_wrapper(*args, **kwds):
-        return GreenTask(coro(*args, **kwds))
+        coro_obj = coro_func(*args, **kwds)
+        return _create_task(coro_obj)
 
     return task_wrapper
 

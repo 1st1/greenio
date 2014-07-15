@@ -9,7 +9,7 @@ Use ``greenio.socket`` in the same way as you would use stdlib's
 from them.
 """
 from __future__ import absolute_import
-import asyncio
+from greenio import asyncio
 from socket import error, SOCK_STREAM
 from socket import socket as std_socket
 

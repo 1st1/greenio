@@ -4,8 +4,13 @@
 ##
 
 
-import asyncio
-import unittest
+try:
+    import asyncio
+    from unittest import TestCase
+except ImportError:
+    import trollius as asyncio
+    from trollius.test_utils import TestCase
+import socket
 
 import greenio
 import greenio.socket as greensocket
@@ -13,7 +18,7 @@ import greenio.socket as greensocket
 import socket as std_socket
 
 
-class SocketTests(unittest.TestCase):
+class SocketTests(TestCase):
 
     def setUp(self):
         asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
