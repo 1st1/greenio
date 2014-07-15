@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 extra = {}
-f = open('README', 'r')
+f = open('README.rst', 'r')
 try:
     extra['long_description'] = f.read()
 finally:
