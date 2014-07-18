@@ -149,8 +149,12 @@ class TaskTests(TestCase):
         def bar():
             pass
 
-        err_msg = (r"^greenlet.yield_from was supposed to receive "
-                   r"only Futures, got .* in task .*$")
+        if hasattr(asyncio.AbstractEventLoop, 'create_task'):
+            err_msg = (r"^greenlet.yield_from was supposed to receive "
+                       r"only Futures, got .* in task .*$")
+        else:
+            err_msg = (r'^"greenio\.yield_from" was supposed to be called '
+                       r'from a "greenio\.task" or a subsequent coroutine$')
 
         @asyncio.coroutine
         def foo():
