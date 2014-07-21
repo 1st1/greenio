@@ -1,10 +1,12 @@
 language: python
 
 python:
+    - 2.7
     - 3.3
     - 3.4
 
 install:
+    - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install trollius>=1.0; fi
     - if [[ $TRAVIS_PYTHON_VERSION == '3.3' ]]; then pip install asyncio; fi
     - python setup.py install
 
