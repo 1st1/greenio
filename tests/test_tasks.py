@@ -11,9 +11,10 @@ import unittest
 
 class TaskTests(unittest.TestCase):
     def setUp(self):
-        asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
+        policy = greenio.GreenEventLoopPolicy()
+        asyncio.set_event_loop_policy(policy)
+        self.loop = policy.new_event_loop()
+        policy.set_event_loop(self.loop)
 
     def tearDown(self):
         self.loop.close()

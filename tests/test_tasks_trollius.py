@@ -20,7 +20,7 @@ class TrolliusTaskTests(TestCase):
         trollius.set_event_loop_policy(policy)
         if asyncio is not None:
             asyncio.set_event_loop_policy(policy)
-        self.loop = trollius.new_event_loop()
+        self.loop = policy.new_event_loop()
         policy.set_event_loop(self.loop)
 
     def tearDown(self):

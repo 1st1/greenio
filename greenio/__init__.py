@@ -150,7 +150,8 @@ if trollius is not None:
         class GreenTrolliusTask(_GreenTaskMixin, trollius.Task):
             pass
 
-        class GreenTrolliusUnixSelectorLoop(_GreenLoopMixin, trollius.SelectorEventLoop):
+        class GreenTrolliusUnixSelectorLoop(_GreenLoopMixin,
+                                            trollius.SelectorEventLoop):
             def create_task(self, coro):
                 return GreenTrolliusTask(coro)
 

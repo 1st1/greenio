@@ -6,10 +6,19 @@
 
 try:
     import asyncio
-    from unittest import TestCase
 except ImportError:
-    import trollius as asyncio
+    asyncio = None
+try:
+    import trollius
+except ImportError:
+    trollius = None
+if asyncio is None and trollius is None:
+    raise ImportError("asyncio and trollius modules are missing")
+
+try:
     from trollius.test_utils import TestCase
+except ImportError:
+    from unittest import TestCase
 
 import greenio
 import greenio.socket as greensocket
@@ -17,21 +26,24 @@ import greenio.socket as greensocket
 import socket as std_socket
 
 
-class SocketTests(TestCase):
+class SocketMixin(object):
+    asyncio = None
+    event_loop_policy = greenio.GreenEventLoopPolicy
 
     def setUp(self):
-        asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
+        policy = self.event_loop_policy()
+        self.asyncio.set_event_loop_policy(policy)
+        self.loop = policy.new_event_loop()
+        policy.set_event_loop(self.loop)
 
     def tearDown(self):
         self.loop.close()
-        asyncio.set_event_loop_policy(None)
+        self.asyncio.set_event_loop_policy(None)
 
     def test_socket_wrong_event_loop(self):
-        loop = asyncio.DefaultEventLoopPolicy().new_event_loop()
+        loop = self.asyncio.DefaultEventLoopPolicy().new_event_loop()
         self.addCleanup(loop.close)
-        asyncio.set_event_loop(loop)
+        self.asyncio.set_event_loop(loop)
         self.assertRaises(AssertionError, greensocket.socket)
 
     def test_socket_docs(self):
@@ -187,3 +199,19 @@ class SocketTests(TestCase):
             greenio.task(server)(greensocket.socket))
         thread.join(1)
         self.assertEqual(non_local['check'], 1)
+
+if asyncio is not None:
+    class SocketTests(SocketMixin, TestCase):
+        asyncio = asyncio
+        event_loop_policy = greenio.GreenEventLoopPolicy
+
+if trollius is not None:
+    class TrolliusSocketTests(SocketMixin, TestCase):
+        asyncio = trollius
+        event_loop_policy = greenio.GreenTrolliusEventLoopPolicy
+
+        def setUp(self):
+            super(TrolliusSocketTests, self).setUp()
+            if asyncio is not None:
+                policy = trollius.get_event_loop_policy()
+                asyncio.set_event_loop_policy(policy)
