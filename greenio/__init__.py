@@ -24,8 +24,9 @@ except ImportError:
 if asyncio is None:
     asyncio = trollius
 
-def _create_task(coro):
-    loop = asyncio.get_event_loop()
+def _create_task(coro, loop):
+    if loop is None:
+        loop = asyncio.get_event_loop()
     if hasattr(loop, 'create_task'):
         return loop.create_task(coro)
     else:
@@ -33,17 +34,17 @@ def _create_task(coro):
 
 
 if trollius is not None:
-    def _async(future):
+    def _async(future, loop):
         # trollius iscoroutine() accepts trollius and asyncio coroutine
         # objects
         if trollius.iscoroutine(future):
-            return _create_task(future)
+            return _create_task(future, loop)
         else:
             return future
 else:
-    def _async(future):
+    def _async(future, loop):
         if asyncio.iscoroutine(future):
-            return _create_task(future)
+            return _create_task(future, loop)
         else:
             return future
 
@@ -166,10 +167,10 @@ if trollius is not None:
         GreenTrolliusEventLoopPolicy = GreenEventLoopPolicy
 
 
-def yield_from(future):
+def yield_from(future, loop=None):
     """A function to use instead of ``yield from`` statement."""
 
-    future = _async(future)
+    future = _async(future, loop)
 
     gl = greenlet.getcurrent()
 
@@ -207,7 +208,7 @@ def yield_from(future):
     return gl.parent.switch(_YIELDED)
 
 
-def task(func):
+def task(func, loop=None):
     """A decorator, allows use of ``yield_from`` in the decorated or
     subsequent coroutines."""
 
@@ -215,7 +216,7 @@ def task(func):
 
     def task_wrapper(*args, **kwds):
         coro_obj = coro_func(*args, **kwds)
-        return _create_task(coro_obj)
+        return _create_task(coro_obj, loop)
 
     return task_wrapper
 
