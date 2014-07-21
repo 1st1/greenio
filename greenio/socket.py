@@ -9,12 +9,12 @@ Use ``greenio.socket`` in the same way as you would use stdlib's
 from them.
 """
 from __future__ import absolute_import
-import asyncio
+from greenio import asyncio
 from socket import error, SOCK_STREAM
 from socket import socket as std_socket
 
 from . import yield_from
-from . import GreenUnixSelectorLoop
+from . import _GreenLoopMixin
 
 
 class socket:
@@ -30,8 +30,8 @@ class socket:
         try:
             self._sock.setblocking(False)
             self._loop = asyncio.get_event_loop()
-            assert isinstance(self._loop, GreenUnixSelectorLoop), \
-                'GreenUnixSelectorLoop event loop is required'
+            assert isinstance(self._loop, _GreenLoopMixin), \
+                'greenio event loop is required'
         except:
             if own_sock is not None:
                 # An unexpected error has occurred. Close the
