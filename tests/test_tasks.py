@@ -4,12 +4,12 @@
 ##
 
 
-import greenio
 import asyncio
-from unittest import TestCase
+import greenio
+import unittest
 
 
-class TaskTests(TestCase):
+class TaskTests(unittest.TestCase):
     def setUp(self):
         asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
         self.loop = asyncio.new_event_loop()
@@ -40,7 +40,7 @@ class TaskTests(TestCase):
         self.assertEqual(fut.result(), 42)
 
     def test_task_yield_from_exception_propagation(self):
-        non_local = {'CHK': 0}
+        CHK = 0
 
         @asyncio.coroutine
         def bar():
@@ -57,10 +57,11 @@ class TaskTests(TestCase):
             try:
                 return (yield from foo())
             except ZeroDivisionError:
-                non_local['CHK'] += 1
+                nonlocal CHK
+                CHK += 1
 
         self.loop.run_until_complete(test())
-        self.assertEqual(non_local['CHK'], 1)
+        self.assertEqual(CHK, 1)
 
     def test_task_yield_from_coroutine(self):
         @asyncio.coroutine

@@ -17,8 +17,7 @@ class TrolliusEventLoopTests(TestCase):
         asyncio.set_event_loop_policy(policy)
         trollius.set_event_loop_policy(policy)
         self.loop = trollius.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-        trollius.set_event_loop(self.loop)
+        policy.set_event_loop(self.loop)
 
     def tearDown(self):
         self.loop.close()
