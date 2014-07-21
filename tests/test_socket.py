@@ -10,7 +10,6 @@ try:
 except ImportError:
     import trollius as asyncio
     from trollius.test_utils import TestCase
-import socket
 
 import greenio
 import greenio.socket as greensocket

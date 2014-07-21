@@ -4,35 +4,43 @@
 ##
 
 
+from trollius import From, Return
+from trollius.test_utils import TestCase
 import greenio
-import asyncio
-from unittest import TestCase
+import trollius
+try:
+    import asyncio
+except ImportError:
+    asyncio = None
 
 
-class TaskTests(TestCase):
+class TrolliusTaskTests(TestCase):
     def setUp(self):
-        asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
+        trollius.set_event_loop_policy(greenio.GreenTrolliusEventLoopPolicy())
+        self.loop = trollius.new_event_loop()
+        trollius.set_event_loop(self.loop)
+        if asyncio is not None:
+            asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
         self.loop.close()
-        asyncio.set_event_loop_policy(None)
+        trollius.set_event_loop_policy(None)
 
     def test_task_yield_from_plain(self):
-        @asyncio.coroutine
+        @trollius.coroutine
         def bar():
-            yield from []
-            return 30
+            yield From(None)
+            raise Return(30)
 
-        @asyncio.coroutine
+        @trollius.coroutine
         def foo():
             bar_result = greenio.yield_from(bar())
             return bar_result + 12
 
         @greenio.task
         def test():
-            return (yield from foo())
+            res = yield From(foo())
+            raise Return(res)
 
         fut = test()
         self.loop.run_until_complete(fut)
@@ -42,20 +50,21 @@ class TaskTests(TestCase):
     def test_task_yield_from_exception_propagation(self):
         non_local = {'CHK': 0}
 
-        @asyncio.coroutine
+        @trollius.coroutine
         def bar():
-            yield
-            yield
+            yield From(None)
+            yield From(None)
             1/0
 
         @greenio.task
         def foo():
             greenio.yield_from(bar())
 
-        @asyncio.coroutine
+        @trollius.coroutine
         def test():
             try:
-                return (yield from foo())
+                res = yield From(foo())
+                raise Return(res)
             except ZeroDivisionError:
                 non_local['CHK'] += 1
 
@@ -63,10 +72,10 @@ class TaskTests(TestCase):
         self.assertEqual(non_local['CHK'], 1)
 
     def test_task_yield_from_coroutine(self):
-        @asyncio.coroutine
+        @trollius.coroutine
         def bar():
-            yield from []
-            return 5
+            yield From(None)
+            raise Return(5)
 
         @greenio.task
         def foo():
@@ -80,14 +89,10 @@ class TaskTests(TestCase):
         def bar():
             pass
 
-        if hasattr(asyncio.AbstractEventLoop, 'create_task'):
-            err_msg = (r"^greenlet.yield_from was supposed to receive "
-                       r"only Futures, got .* in task .*$")
-        else:
-            err_msg = (r'^"greenio\.yield_from" was supposed to be called '
-                       r'from a "greenio\.task" or a subsequent coroutine$')
+        err_msg = (r"^greenlet.yield_from was supposed to receive "
+                   r"only Futures, got .* in task .*$")
 
-        @asyncio.coroutine
+        @trollius.coroutine
         def foo():
             with self.assertRaisesRegex(RuntimeError, err_msg):
                 greenio.yield_from(bar)
