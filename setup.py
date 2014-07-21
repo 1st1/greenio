@@ -11,7 +11,7 @@ finally:
 
 setup(
     name='greenio',
-    version='0.5.0',
+    version='0.6.0',
     description="Greenlets for asyncio (PEP 3156).",
     url='https://github.com/1st1/greenio/',
     license='Apache 2.0',

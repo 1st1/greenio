@@ -1,0 +1,5 @@
+0.6.0
+-----
+
+- Added compatibility with Python 2.7 and Trollius.
+- Use of new 'loop.create_task' API.
