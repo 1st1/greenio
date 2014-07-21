@@ -26,4 +26,6 @@ def test():
 
 
 asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
-asyncio.get_event_loop().run_until_complete(test())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(test())
+loop.close()

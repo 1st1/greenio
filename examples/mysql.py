@@ -71,4 +71,6 @@ if __name__ == '__main__':
                               return_when=asyncio.FIRST_COMPLETED)
 
     asyncio.set_event_loop_policy(greenio.GreenEventLoopPolicy())
-    asyncio.get_event_loop().run_until_complete(asyncio.Task(run()))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(run())
+    loop.close()
