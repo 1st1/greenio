@@ -24,28 +24,29 @@ except ImportError:
 if asyncio is None:
     asyncio = trollius
 
+def _create_task(coro):
+    loop = asyncio.get_event_loop()
+    if hasattr(loop, 'create_task'):
+        return loop.create_task(coro)
+    else:
+        return GreenTask(coro, loop=loop)
+
+
 if trollius is not None:
     def _async(future):
         # trollius iscoroutine() accepts trollius and asyncio coroutine
         # objects
         if trollius.iscoroutine(future):
-            loop = asyncio.get_event_loop()
-            return loop.create_task(future)
+            return _create_task(future)
         else:
             return future
-
-    def _create_task(coro):
-        loop = asyncio.get_event_loop()
-        return loop.create_task(coro)
 else:
     def _async(future):
         if asyncio.iscoroutine(future):
-            return GreenTask(future)
+            return _create_task(future)
         else:
             return future
 
-    def _create_task(coro):
-        return GreenTask(coro)
 
 _FUTURE_CLASSES = (asyncio.Future,)
 if trollius is not None and trollius is not asyncio:
