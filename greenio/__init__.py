@@ -139,7 +139,7 @@ class GreenTask(_GreenTaskMixin, asyncio.Task):
 
 class GreenUnixSelectorLoop(_GreenLoopMixin, asyncio.SelectorEventLoop):
     def create_task(self, coro):
-        return GreenTask(coro)
+        return GreenTask(coro, loop=self)
 
 
 class GreenEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
